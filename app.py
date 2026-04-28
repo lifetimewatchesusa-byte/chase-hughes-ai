@@ -1,9 +1,28 @@
 from flask import Flask, request, jsonify, render_template_string
 from openai import OpenAI
 import os
+import requests
 
 app = Flask(__name__)
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+ANYTHINGLLM_URL = os.environ.get("ANYTHINGLLM_URL")
+ANYTHINGLLM_KEY = os.environ.get("ANYTHINGLLM_KEY")
+
+def search_knowledge(question):
+    try:
+        response = requests.post(
+            f"{ANYTHINGLLM_URL}/api/v1/workspace/chase-hughes/chat",
+            headers={
+                "Authorization": f"Bearer {ANYTHINGLLM_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={"message": question, "mode": "query"},
+            timeout=10
+        )
+        data = response.json()
+        return data.get("textResponse", "")
+    except:
+        return ""
 
 HTML = """
 <!DOCTYPE html>
@@ -65,7 +84,7 @@ HTML = """
         <div id="situation" class="tabcontent">
             <div class="card">
                 <h2>Situation Advisor</h2>
-                <textarea id="situation-input" rows="8" placeholder="Describe any social situation... Example: My employee keeps missing deadlines and makes excuses. How do I handle this conversation?"></textarea>
+                <textarea id="situation-input" rows="8" placeholder="Describe any social situation..."></textarea>
                 <br>
                 <button class="submit" onclick="adviseSituation()">Get Chase's Approach</button>
                 <div id="situation-response" class="response" style="display:none"></div>
@@ -121,10 +140,14 @@ def home():
 @app.route('/ask', methods=['POST'])
 def ask():
     question = request.json.get('question')
+    knowledge = search_knowledge(question)
+    system_prompt = "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague."
+    if knowledge:
+        system_prompt += f"\n\nHere is relevant content from Chase Hughes materials:\n{knowledge}"
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
         ]
     )
@@ -145,15 +168,19 @@ def email():
 @app.route('/situation', methods=['POST'])
 def situation():
     situation_text = request.json.get('situation')
+    knowledge = search_knowledge(situation_text)
+    system_prompt = "You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific."
+    if knowledge:
+        system_prompt += f"\n\nRelevant Chase Hughes content:\n{knowledge}"
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": "Advise me on this situation:\n\n" + situation_text}
         ]
     )
     return jsonify({"answer": response.choices[0].message.content})
 
-if __name__ == '_main_':
+if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)

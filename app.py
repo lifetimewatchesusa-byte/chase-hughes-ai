@@ -15,24 +15,6 @@ HTML = """
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0a; color: #ffffff; min-height: 100vh; }
         .header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 30px 20px; text-align: center; border-bottom: 2px solid #e94560; box-shadow: 0 4px 20px rgba(233,69,96,0.3); }
-        .header h1 { font-size: 2.5em; color: #e94560;…
-[8:11 AM, 4/28/2026] Chaim: from flask import Flask, request, jsonify, render_template_string
-from openai import OpenAI
-import os
-
-app = Flask(_name_)
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-
-HTML = """
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Chase Hughes AI</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0a; color: #ffffff; min-height: 100vh; }
-        .header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 30px 20px; text-align: center; border-bottom: 2px solid #e94560; box-shadow: 0 4px 20px rgba(233,69,96,0.3); }
         .header h1 { font-size: 2.5em; color: #e94560; letter-spacing: 2px; text-transform: uppercase; }
         .header p { color: #888; margin-top: 8px; font-size: 0.9em; letter-spacing: 1px; }
         .container { max-width: 850px; margin: 0 auto; padding: 30px 20px; }

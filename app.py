@@ -13,160 +13,30 @@ HTML = """
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            background: #0a0a0a; 
-            color: #ffffff; 
-            min-height: 100vh;
-        }
-        .header {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            padding: 30px 20px;
-            text-align: center;
-            border-bottom: 2px solid #e94560;
-            box-shadow: 0 4px 20px rgba(233,69,96,0.3);
-        }
-        .header h1 { 
-            font-size: 2.5em; 
-            color: #e94560;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-        .header p {
-            color: #888;
-            margin-top: 8px;
-            font-size: 0.9em;
-            letter-spacing: 1px;
-        }
-        .container { 
-            max-width: 850px; 
-            margin: 0 auto; 
-            padding: 30px 20px; 
-        }
-        .tab { 
-            display: flex;
-            background: #111;
-            border-radius: 10px;
-            padding: 5px;
-            margin-bottom: 25px;
-            border: 1px solid #222;
-        }
-        .tab button { 
-            flex: 1;
-            background: none; 
-            border: none; 
-            color: #888; 
-            padding: 12px 20px; 
-            cursor: pointer; 
-            font-size: 15px;
-            border-radius: 8px;
-            transition: all 0.3s;
-            font-weight: 500;
-        }
-        .tab button.active { 
-            background: #e94560;
-            color: white;
-            box-shadow: 0 4px 15px rgba(233,69,96,0.4);
-        }
-        .tab button:hover:not(.active) {
-            color: #e94560;
-            background: #1a1a1a;
-        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0a; color: #ffffff; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1a1a2e, #16213e); padding: 30px 20px; text-align: center; border-bottom: 2px solid #e94560; box-shadow: 0 4px 20px rgba(233,69,96,0.3); }
+        .header h1 { font-size: 2.5em; color: #e94560; letter-spacing: 2px; text-transform: uppercase; }
+        .header p { color: #888; margin-top: 8px; font-size: 0.9em; letter-spacing: 1px; }
+        .container { max-width: 850px; margin: 0 auto; padding: 30px 20px; }
+        .tab { display: flex; background: #111; border-radius: 10px; padding: 5px; margin-bottom: 25px; border: 1px solid #222; }
+        .tab button { flex: 1; background: none; border: none; color: #888; padding: 12px 20px; cursor: pointer; font-size: 15px; border-radius: 8px; transition: all 0.3s; font-weight: 500; }
+        .tab button.active { background: #e94560; color: white; box-shadow: 0 4px 15px rgba(233,69,96,0.4); }
+        .tab button:hover:not(.active) { color: #e94560; background: #1a1a1a; }
         .tabcontent { display: none; }
-        .tabcontent.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .card {
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 12px;
-            padding: 25px;
-        }
-        .card h2 {
-            color: #e94560;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-            letter-spacing: 1px;
-        }
-        textarea { 
-            width: 100%; 
-            padding: 15px; 
-            background: #0a0a0a; 
-            color: #ffffff; 
-            border: 1px solid #333; 
-            border-radius: 8px; 
-            font-size: 14px;
-            line-height: 1.6;
-            resize: vertical;
-            transition: border 0.3s;
-            font-family: 'Segoe UI', Arial, sans-serif;
-        }
-        textarea:focus {
-            outline: none;
-            border-color: #e94560;
-            box-shadow: 0 0 10px rgba(233,69,96,0.2);
-        }
-        button.submit { 
-            background: linear-gradient(135deg, #e94560, #c23152);
-            color: white; 
-            border: none; 
-            padding: 14px 35px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            font-size: 15px; 
-            margin-top: 15px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(233,69,96,0.3);
-        }
-        button.submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(233,69,96,0.5);
-        }
-        button.submit:active { transform: translateY(0); }
-        .response { 
-            background: #0a0a0a;
-            border: 1px solid #333;
-            border-left: 4px solid #e94560;
-            padding: 20px; 
-            border-radius: 8px; 
-            margin-top: 20px; 
-            white-space: pre-wrap; 
-            line-height: 1.8;
-            font-size: 14px;
-            animation: fadeIn 0.3s ease;
-        }
-        .loading { 
-            color: #e94560;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .loading::after {
-            content: '';
-            width: 20px;
-            height: 20px;
-            border: 2px solid #e94560;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: #444;
-            font-size: 12px;
-            border-top: 1px solid #1a1a1a;
-            margin-top: 40px;
-        }
+        .tabcontent.active { display: block; }
+        .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 25px; }
+        .card h2 { color: #e94560; margin-bottom: 15px; font-size: 1.3em; letter-spacing: 1px; }
+        textarea { width: 100%; padding: 15px; background: #0a0a0a; color: #ffffff; border: 1px solid #333; border-radius: 8px; font-size: 14px; line-height: 1.6; resize: vertical; font-family: 'Segoe UI', Arial, sans-serif; }
+        textarea:focus { outline: none; border-color: #e94560; }
+        button.submit { background: linear-gradient(135deg, #e94560, #c23152); color: white; border: none; padding: 14px 35px; border-radius: 8px; cursor: pointer; font-size: 15px; margin-top: 15px; font-weight: 600; letter-spacing: 1px; }
+        .response { background: #0a0a0a; border: 1px solid #333; border-left: 4px solid #e94560; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; line-height: 1.8; font-size: 14px; }
+        .footer { text-align: center; padding: 20px; color: #444; font-size: 12px; border-top: 1px solid #1a1a1a; margin-top: 40px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>🧠 Chase Hughes AI</h1>
-        <p>Behavioral Intelligence • Powered by Chase Hughes' Complete Library</p>
+        <h1>Chase Hughes AI</h1>
+        <p>Behavioral Intelligence - Powered by Chase Hughes Complete Library</p>
     </div>
     <div class="container">
         <div class="tab">
@@ -202,7 +72,7 @@ HTML = """
                 const q = document.getElementById('question').value;
                 const r = document.getElementById('chat-response');
                 r.style.display = 'block';
-                r.innerHTML = '<span class="loading">Thinking</span>';
+                r.innerHTML = 'Thinking...';
                 const res = await fetch('/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q})});
                 const data = await res.json();
                 r.innerHTML = data.answer;
@@ -211,7 +81,7 @@ HTML = """
                 const e = document.getElementById('email-input').value;
                 const r = document.getElementById('email-response');
                 r.style.display = 'block';
-                r.innerHTML = '<span class="loading">Crafting response</span>';
+                r.innerHTML = 'Crafting response...';
                 const res = await fetch('/email', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:e})});
                 const data = await res.json();
                 r.innerHTML = data.answer;
@@ -219,7 +89,7 @@ HTML = """
         </script>
     </div>
     <div class="footer">
-        Built on Chase Hughes' complete library • The Ellipsis Manual • Six Minute X-Ray • Behavior Ops Manual • Tongue
+        Built on Chase Hughes complete library - The Ellipsis Manual - Six Minute X-Ray - Behavior Ops Manual - Tongue
     </div>
 </body>
 </html>
@@ -248,11 +118,11 @@ def email():
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are Chase Hughes. Read this email and write a strategic response using behavioral influence principles including rapport building, compliance triggers, and elicitation techniques. Be direct and tactical."},
-            {"role": "user", "content": f"Write a response to this email:\n\n{email_text}"}
+            {"role": "user", "content": "Write a response to this email:\n\n" + email_text}
         ]
     )
     return jsonify({"answer": response.choices[0].message.content})
 
-if _name_ == '__main__':
+if _name_ == '_main_':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)

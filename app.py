@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template_string
 from openai import OpenAI
 import os
 
-app = Flask(__name__)
+app = Flask(_name_)
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 HTML = """
@@ -12,65 +12,215 @@ HTML = """
     <title>Chase Hughes AI</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
-        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; background: #1a1a2e; color: white; }
-        h1 { color: #e94560; text-align: center; }
-        .tab { overflow: hidden; border-bottom: 2px solid #e94560; margin-bottom: 20px; }
-        .tab button { background: none; border: none; color: white; padding: 14px 20px; cursor: pointer; font-size: 16px; }
-        .tab button.active { background: #e94560; border-radius: 5px 5px 0 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            background: #0a0a0a; 
+            color: #ffffff; 
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 2px solid #e94560;
+            box-shadow: 0 4px 20px rgba(233,69,96,0.3);
+        }
+        .header h1 { 
+            font-size: 2.5em; 
+            color: #e94560;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .header p {
+            color: #888;
+            margin-top: 8px;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+        .container { 
+            max-width: 850px; 
+            margin: 0 auto; 
+            padding: 30px 20px; 
+        }
+        .tab { 
+            display: flex;
+            background: #111;
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 25px;
+            border: 1px solid #222;
+        }
+        .tab button { 
+            flex: 1;
+            background: none; 
+            border: none; 
+            color: #888; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            font-size: 15px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .tab button.active { 
+            background: #e94560;
+            color: white;
+            box-shadow: 0 4px 15px rgba(233,69,96,0.4);
+        }
+        .tab button:hover:not(.active) {
+            color: #e94560;
+            background: #1a1a1a;
+        }
         .tabcontent { display: none; }
-        .tabcontent.active { display: block; }
-        textarea { width: 100%; padding: 12px; background: #16213e; color: white; border: 1px solid #e94560; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
-        button.submit { background: #e94560; color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        .response { background: #16213e; padding: 15px; border-radius: 5px; margin-top: 15px; white-space: pre-wrap; line-height: 1.6; }
-        .loading { color: #e94560; }
+        .tabcontent.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 25px;
+        }
+        .card h2 {
+            color: #e94560;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            letter-spacing: 1px;
+        }
+        textarea { 
+            width: 100%; 
+            padding: 15px; 
+            background: #0a0a0a; 
+            color: #ffffff; 
+            border: 1px solid #333; 
+            border-radius: 8px; 
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border 0.3s;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #e94560;
+            box-shadow: 0 0 10px rgba(233,69,96,0.2);
+        }
+        button.submit { 
+            background: linear-gradient(135deg, #e94560, #c23152);
+            color: white; 
+            border: none; 
+            padding: 14px 35px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 15px; 
+            margin-top: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(233,69,96,0.3);
+        }
+        button.submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233,69,96,0.5);
+        }
+        button.submit:active { transform: translateY(0); }
+        .response { 
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-left: 4px solid #e94560;
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-top: 20px; 
+            white-space: pre-wrap; 
+            line-height: 1.8;
+            font-size: 14px;
+            animation: fadeIn 0.3s ease;
+        }
+        .loading { 
+            color: #e94560;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e94560;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #444;
+            font-size: 12px;
+            border-top: 1px solid #1a1a1a;
+            margin-top: 40px;
+        }
     </style>
 </head>
 <body>
-    <h1>🧠 Chase Hughes AI</h1>
-    <div class="tab">
-        <button class="active" onclick="openTab('chat')">Chat</button>
-        <button onclick="openTab('email')">Email Assistant</button>
+    <div class="header">
+        <h1>🧠 Chase Hughes AI</h1>
+        <p>Behavioral Intelligence • Powered by Chase Hughes' Complete Library</p>
     </div>
-    <div id="chat" class="tabcontent active">
-        <h2>Ask Chase Hughes</h2>
-        <textarea id="question" rows="4" placeholder="Ask anything about behavior, influence, or psychology..."></textarea>
-        <br>
-        <button class="submit" onclick="askChase()">Get Answer</button>
-        <div id="chat-response" class="response" style="display:none"></div>
+    <div class="container">
+        <div class="tab">
+            <button class="active" onclick="openTab('chat', this)">Chat</button>
+            <button onclick="openTab('email', this)">Email Assistant</button>
+        </div>
+        <div id="chat" class="tabcontent active">
+            <div class="card">
+                <h2>Ask Chase Hughes</h2>
+                <textarea id="question" rows="4" placeholder="Ask anything about behavior, influence, or psychology..."></textarea>
+                <br>
+                <button class="submit" onclick="askChase()">Get Answer</button>
+                <div id="chat-response" class="response" style="display:none"></div>
+            </div>
+        </div>
+        <div id="email" class="tabcontent">
+            <div class="card">
+                <h2>Email Assistant</h2>
+                <textarea id="email-input" rows="8" placeholder="Paste the email you received..."></textarea>
+                <br>
+                <button class="submit" onclick="writeEmail()">Write Response</button>
+                <div id="email-response" class="response" style="display:none"></div>
+            </div>
+        </div>
+        <script>
+            function openTab(name, btn) {
+                document.querySelectorAll('.tabcontent').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab button').forEach(b => b.classList.remove('active'));
+                document.getElementById(name).classList.add('active');
+                btn.classList.add('active');
+            }
+            async function askChase() {
+                const q = document.getElementById('question').value;
+                const r = document.getElementById('chat-response');
+                r.style.display = 'block';
+                r.innerHTML = '<span class="loading">Thinking</span>';
+                const res = await fetch('/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q})});
+                const data = await res.json();
+                r.innerHTML = data.answer;
+            }
+            async function writeEmail() {
+                const e = document.getElementById('email-input').value;
+                const r = document.getElementById('email-response');
+                r.style.display = 'block';
+                r.innerHTML = '<span class="loading">Crafting response</span>';
+                const res = await fetch('/email', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:e})});
+                const data = await res.json();
+                r.innerHTML = data.answer;
+            }
+        </script>
     </div>
-    <div id="email" class="tabcontent">
-        <h2>Email Assistant</h2>
-        <textarea id="email-input" rows="8" placeholder="Paste the email you received..."></textarea>
-        <br>
-        <button class="submit" onclick="writeEmail()">Write Response</button>
-        <div id="email-response" class="response" style="display:none"></div>
+    <div class="footer">
+        Built on Chase Hughes' complete library • The Ellipsis Manual • Six Minute X-Ray • Behavior Ops Manual • Tongue
     </div>
-    <script>
-        function openTab(name) {
-            document.querySelectorAll('.tabcontent').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab button').forEach(b => b.classList.remove('active'));
-            document.getElementById(name).classList.add('active');
-            event.target.classList.add('active');
-        }
-        async function askChase() {
-            const q = document.getElementById('question').value;
-            const r = document.getElementById('chat-response');
-            r.style.display = 'block';
-            r.innerHTML = '<span class="loading">Thinking...</span>';
-            const res = await fetch('/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q})});
-            const data = await res.json();
-            r.innerHTML = data.answer;
-        }
-        async function writeEmail() {
-            const e = document.getElementById('email-input').value;
-            const r = document.getElementById('email-response');
-            r.style.display = 'block';
-            r.innerHTML = '<span class="loading">Crafting response...</span>';
-            const res = await fetch('/email', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:e})});
-            const data = await res.json();
-            r.innerHTML = data.answer;
-        }
-    </script>
 </body>
 </html>
 """
@@ -85,7 +235,7 @@ def ask():
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model - Focus (the brain automatically focuses on novelty, pattern interruption, and things out of the norm - use this to capture attention), Authority (establish credibility and perceived power - people comply with authority figures automatically), Tribe (humans need belonging - align yourself with their tribe or create tribal identity), Emotion (emotion drives all decisions - logic justifies them after the fact). BMEPA (Behavior Micro Expression Pacing Anchoring). Elicitation - getting information without direct questioning using techniques like bracketing, presumptive attribution, word echoing. Behavior stacking - layering behavioral cues. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read - reading someone instantly. Rapport architecture - building deep connection fast. The 6 stages of rapport. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague."},
+            {"role": "system", "content": "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague."},
             {"role": "user", "content": question}
         ]
     )
@@ -97,12 +247,12 @@ def email():
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are Chase Hughes. Read this email and write a response using behavioral influence principles. Be strategic, direct, and use rapport building techniques."},
+            {"role": "system", "content": "You are Chase Hughes. Read this email and write a strategic response using behavioral influence principles including rapport building, compliance triggers, and elicitation techniques. Be direct and tactical."},
             {"role": "user", "content": f"Write a response to this email:\n\n{email_text}"}
         ]
     )
     return jsonify({"answer": response.choices[0].message.content})
 
-if __name__ == '__main__':
+if _name_ == '_main_':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)

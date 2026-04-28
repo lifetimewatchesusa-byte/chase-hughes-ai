@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify, render_template_string
 from openai import OpenAI
 import os
 
-app = Flask(_name_)
+app = Flask(__name__)
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 HTML = """

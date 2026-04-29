@@ -44,11 +44,20 @@ HTML = """
         .tabcontent.active { display: block; }
         .card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 25px; }
         .card h2 { color: #e94560; margin-bottom: 15px; font-size: 1.3em; letter-spacing: 1px; }
+        .chat-box { background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 15px; min-height: 300px; max-height: 500px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .msg { padding: 12px 16px; border-radius: 8px; max-width: 85%; line-height: 1.6; font-size: 14px; white-space: pre-wrap; }
+        .msg.user { background: #1a1a2e; border: 1px solid #e94560; align-self: flex-end; color: #fff; }
+        .msg.assistant { background: #111; border-left: 4px solid #e94560; align-self: flex-start; color: #fff; }
+        .input-row { display: flex; gap: 10px; align-items: flex-end; }
+        .input-row textarea { margin: 0; flex: 1; }
         textarea { width: 100%; padding: 15px; background: #0a0a0a; color: #ffffff; border: 1px solid #333; border-radius: 8px; font-size: 14px; line-height: 1.6; resize: vertical; font-family: 'Segoe UI', Arial, sans-serif; }
         textarea:focus { outline: none; border-color: #e94560; }
-        button.submit { background: linear-gradient(135deg, #e94560, #c23152); color: white; border: none; padding: 14px 35px; border-radius: 8px; cursor: pointer; font-size: 15px; margin-top: 15px; font-weight: 600; letter-spacing: 1px; }
+        button.submit { background: linear-gradient(135deg, #e94560, #c23152); color: white; border: none; padding: 14px 25px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; letter-spacing: 1px; white-space: nowrap; }
+        button.clear { background: #222; color: #888; border: 1px solid #333; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; margin-bottom: 10px; }
+        button.clear:hover { color: #e94560; border-color: #e94560; }
         .response { background: #0a0a0a; border: 1px solid #333; border-left: 4px solid #e94560; padding: 20px; border-radius: 8px; margin-top: 20px; white-space: pre-wrap; line-height: 1.8; font-size: 14px; }
         .footer { text-align: center; padding: 20px; color: #444; font-size: 12px; border-top: 1px solid #1a1a1a; margin-top: 40px; }
+        .typing { color: #888; font-style: italic; font-size: 13px; }
     </style>
 </head>
 <body>
@@ -62,15 +71,19 @@ HTML = """
             <button onclick="openTab('email', this)">Email Assistant</button>
             <button onclick="openTab('situation', this)">Situation Advisor</button>
         </div>
+
         <div id="chat" class="tabcontent active">
             <div class="card">
                 <h2>Ask Chase Hughes</h2>
-                <textarea id="question" rows="4" placeholder="Ask anything about behavior, influence, or psychology..."></textarea>
-                <br>
-                <button class="submit" onclick="askChase()">Get Answer</button>
-                <div id="chat-response" class="response" style="display:none"></div>
+                <button class="clear" onclick="clearChat()">Clear conversation</button>
+                <div class="chat-box" id="chat-box"></div>
+                <div class="input-row">
+                    <textarea id="question" rows="2" placeholder="Ask anything about behavior, influence, or psychology..." onkeydown="handleKey(event)"></textarea>
+                    <button class="submit" onclick="askChase()">Send</button>
+                </div>
             </div>
         </div>
+
         <div id="email" class="tabcontent">
             <div class="card">
                 <h2>Email Assistant</h2>
@@ -80,6 +93,7 @@ HTML = """
                 <div id="email-response" class="response" style="display:none"></div>
             </div>
         </div>
+
         <div id="situation" class="tabcontent">
             <div class="card">
                 <h2>Situation Advisor</h2>
@@ -89,22 +103,62 @@ HTML = """
                 <div id="situation-response" class="response" style="display:none"></div>
             </div>
         </div>
+
         <script>
+            let chatHistory = [];
+
             function openTab(name, btn) {
                 document.querySelectorAll('.tabcontent').forEach(t => t.classList.remove('active'));
                 document.querySelectorAll('.tab button').forEach(b => b.classList.remove('active'));
                 document.getElementById(name).classList.add('active');
                 btn.classList.add('active');
             }
-            async function askChase() {
-                const q = document.getElementById('question').value;
-                const r = document.getElementById('chat-response');
-                r.style.display = 'block';
-                r.innerHTML = 'Thinking...';
-                const res = await fetch('/ask', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({question:q})});
-                const data = await res.json();
-                r.innerHTML = data.answer;
+
+            function handleKey(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    askChase();
+                }
             }
+
+            function appendMsg(role, text) {
+                const box = document.getElementById('chat-box');
+                const div = document.createElement('div');
+                div.className = 'msg ' + role;
+                div.innerText = text;
+                box.appendChild(div);
+                box.scrollTop = box.scrollHeight;
+                return div;
+            }
+
+            function clearChat() {
+                chatHistory = [];
+                document.getElementById('chat-box').innerHTML = '';
+            }
+
+            async function askChase() {
+                const input = document.getElementById('question');
+                const q = input.value.trim();
+                if (!q) return;
+                input.value = '';
+
+                appendMsg('user', q);
+                chatHistory.push({role: 'user', content: q});
+
+                const typing = appendMsg('assistant', 'Thinking...');
+                typing.classList.add('typing');
+
+                const res = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({question: q, history: chatHistory.slice(-10)})
+                });
+                const data = await res.json();
+                typing.classList.remove('typing');
+                typing.innerText = data.answer;
+                chatHistory.push({role: 'assistant', content: data.answer});
+            }
+
             async function writeEmail() {
                 const e = document.getElementById('email-input').value;
                 const r = document.getElementById('email-response');
@@ -114,6 +168,7 @@ HTML = """
                 const data = await res.json();
                 r.innerHTML = data.answer;
             }
+
             async function adviseSituation() {
                 const s = document.getElementById('situation-input').value;
                 const r = document.getElementById('situation-response');
@@ -139,16 +194,21 @@ def home():
 @app.route('/ask', methods=['POST'])
 def ask():
     question = request.json.get('question')
+    history = request.json.get('history', [])
     knowledge = search_knowledge(question)
+
     system_prompt = "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague."
     if knowledge:
         system_prompt += f"\n\nHere is relevant content from Chase Hughes materials:\n{knowledge}"
+
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in history[:-1]:
+        messages.append({"role": msg["role"], "content": msg["content"]})
+    messages.append({"role": "user", "content": question})
+
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. Answer based on the provided context from Chase's materials. If the context doesn't fully cover the question, use your expertise as Chase Hughes to fill in the gaps with his behavioral principles."},
-            {"role": "user", "content": question}
-        ]
+        messages=messages
     )
     return jsonify({"answer": response.choices[0].message.content})
 

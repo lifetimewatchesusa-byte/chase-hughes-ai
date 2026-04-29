@@ -1,31 +1,32 @@
 from flask import Flask, request, jsonify, render_template_string
 from openai import OpenAI
+from pinecone import Pinecone
 import os
-import requests
 
-app = Flask(__name__)
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-ANYTHINGLLM_URL = os.environ.get("ANYTHINGLLM_URL")
-ANYTHINGLLM_KEY = os.environ.get("ANYTHINGLLM_KEY")
+app = Flask(*name*)
+client = OpenAI(api_key=os.environ.get(“OPENAI_API_KEY”))
 
-def search_knowledge(question):
-    try:
-        response = requests.post(
-            f"{ANYTHINGLLM_URL}/api/v1/workspace/chase-hughes/chat",
-            headers={
-                "Authorization": f"Bearer {ANYTHINGLLM_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={"message": question, "mode": "query"},
-            timeout=10
-        )
-        data = response.json()
-        return data.get("textResponse", "")
-    except:
-        return ""
+pc = Pinecone(api_key=os.environ.get(“PINECONE_API_KEY”))
+index = pc.Index(“chase-hughes”)
 
-HTML = """
+def search_knowledge(question, top_k=5):
+try:
+response = client.embeddings.create(
+input=question,
+model=“text-embedding-3-small”
+)
+query_vector = response.data[0].embedding
+results = index.query(vector=query_vector, top_k=top_k, include_metadata=True)
+chunks = [match[“metadata”][“text”] for match in results[“matches”] if “text” in match[“metadata”]]
+return “\n\n”.join(chunks)
+except Exception as e:
+print(f”Pinecone search error: {e}”)
+return “”
+
+HTML = “””
+
 <!DOCTYPE html>
+
 <html>
 <head>
     <title>Chase Hughes AI</title>
@@ -133,54 +134,58 @@ HTML = """
 </html>
 """
 
-@app.route('/')
+@app.route(’/’)
 def home():
-    return render_template_string(HTML)
+return render_template_string(HTML)
 
-@app.route('/ask', methods=['POST'])
+@app.route(’/ask’, methods=[‘POST’])
 def ask():
-    question = request.json.get('question')
-    knowledge = search_knowledge(question)
-    system_prompt = "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague."
-    if knowledge:
-        system_prompt += f"\n\nHere is relevant content from Chase Hughes materials:\n{knowledge}"
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": question}
-        ]
-    )
-    return jsonify({"answer": response.choices[0].message.content})
+question = request.json.get(‘question’)
+knowledge = search_knowledge(question)
+system_prompt = “You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague.”
+if knowledge:
+system_prompt += f”\n\nHere is relevant content from Chase Hughes materials:\n{knowledge}”
+response = client.chat.completions.create(
+model=“gpt-4o-mini”,
+messages=[
+{“role”: “system”, “content”: system_prompt},
+{“role”: “user”, “content”: question}
+]
+)
+return jsonify({“answer”: response.choices[0].message.content})
 
-@app.route('/email', methods=['POST'])
+@app.route(’/email’, methods=[‘POST’])
 def email():
-    email_text = request.json.get('email')
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are Chase Hughes. Read this email and write a strategic response using behavioral influence principles including rapport building, compliance triggers, and elicitation techniques. Be direct and tactical."},
-            {"role": "user", "content": "Write a response to this email:\n\n" + email_text}
-        ]
-    )
-    return jsonify({"answer": response.choices[0].message.content})
+email_text = request.json.get(‘email’)
+knowledge = search_knowledge(email_text)
+system_prompt = “You are Chase Hughes. Read this email and write a strategic response using behavioral influence principles including rapport building, compliance triggers, and elicitation techniques. Be direct and tactical.”
+if knowledge:
+system_prompt += f”\n\nRelevant Chase Hughes content:\n{knowledge}”
+response = client.chat.completions.create(
+model=“gpt-4o-mini”,
+messages=[
+{“role”: “system”, “content”: system_prompt},
+{“role”: “user”, “content”: “Write a response to this email:\n\n” + email_text}
+]
+)
+return jsonify({“answer”: response.choices[0].message.content})
 
-@app.route('/situation', methods=['POST'])
+@app.route(’/situation’, methods=[‘POST’])
 def situation():
-    situation_text = request.json.get('situation')
-    knowledge = search_knowledge(situation_text)
-    system_prompt = "You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific."
-    if knowledge:
-        system_prompt += f"\n\nRelevant Chase Hughes content:\n{knowledge}"
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": "Advise me on this situation:\n\n" + situation_text}
-        ]
-    )
-    return jsonify({"answer": response.choices[0].message.content})
+situation_text = request.json.get(‘situation’)
+knowledge = search_knowledge(situation_text)
+system_prompt = “You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific.”
+if knowledge:
+system_prompt += f”\n\nRelevant Chase Hughes content:\n{knowledge}”
+response = client.chat.completions.create(
+model=“gpt-4o-mini”,
+messages=[
+{“role”: “system”, “content”: system_prompt},
+{“role”: “user”, “content”: “Advise me on this situation:\n\n” + situation_text}
+]
+)
+return jsonify({“answer”: response.choices[0].message.content})
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+if *name* == ‘*main*’:
+port = int(os.environ.get(“PORT”, 5000))
+app.run(host=‘0.0.0.0’, port=port)

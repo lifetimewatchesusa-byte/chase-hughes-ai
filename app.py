@@ -174,7 +174,7 @@ return jsonify({"answer": response.choices[0].message.content})
 def situation():
 situation_text = request.json.get('situation')
 knowledge = search_knowledge(situation_text)
-system_prompt = "You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific.”
+system_prompt = "You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific."
 if knowledge:
 system_prompt += f"\n\nRelevant Chase Hughes content:\n{knowledge}"
 response = client.chat.completions.create(

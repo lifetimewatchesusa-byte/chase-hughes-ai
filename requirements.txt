@@ -2,4 +2,4 @@ flask
 openai
 gunicorn
 requests
-pinecone-client
+pinecone

@@ -4,26 +4,26 @@ from pinecone import Pinecone
 import os
 
 app = Flask(*name*)
-client = OpenAI(api_key=os.environ.get(“OPENAI_API_KEY”))
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-pc = Pinecone(api_key=os.environ.get(“PINECONE_API_KEY”))
-index = pc.Index(“chase-hughes”)
+pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+index = pc.Index("chase-hughes")
 
 def search_knowledge(question, top_k=5):
 try:
 response = client.embeddings.create(
 input=question,
-model=“text-embedding-3-small”
+model="text-embedding-3-small"
 )
 query_vector = response.data[0].embedding
 results = index.query(vector=query_vector, top_k=top_k, include_metadata=True)
-chunks = [match[“metadata”][“text”] for match in results[“matches”] if “text” in match[“metadata”]]
-return “\n\n”.join(chunks)
+chunks = [match["metadata"]["text"] for match in results["matches"] if "text" in match["metadata"]]
+return "\n\n".join(chunks)
 except Exception as e:
-print(f”Pinecone search error: {e}”)
-return “”
+print(f"Pinecone search error: {e}")
+return ""
 
-HTML = “””
+HTML = """
 
 <!DOCTYPE html>
 
@@ -134,58 +134,58 @@ HTML = “””
 </html>
 """
 
-@app.route(’/’)
+@app.route('/')
 def home():
 return render_template_string(HTML)
 
-@app.route(’/ask’, methods=[‘POST’])
+@app.route('/ask', methods=['POST'])
 def ask():
-question = request.json.get(‘question’)
+question = request.json.get('question')
 knowledge = search_knowledge(question)
-system_prompt = “You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague.”
+system_prompt = "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. You know these frameworks deeply: FATE Model (Focus = brain automatically focuses on novelty and pattern interruption, Authority = establish credibility and perceived power, Tribe = humans need belonging, Emotion = emotion drives all decisions). BMEPA. Elicitation - getting information without direct questioning using bracketing, presumptive attribution, word echoing. Behavior stacking. Baseline - establishing normal behavior to detect deviations. Compliance triggers - reciprocity, social proof, authority, scarcity. Cold read. Rapport architecture. Always answer directly and tactically like Chase would in a training session. Give real scripts and examples. Never be vague."
 if knowledge:
-system_prompt += f”\n\nHere is relevant content from Chase Hughes materials:\n{knowledge}”
+system_prompt += f"\n\nHere is relevant content from Chase Hughes materials:\n{knowledge}"
 response = client.chat.completions.create(
-model=“gpt-4o-mini”,
+model="gpt-4o-mini",
 messages=[
-{“role”: “system”, “content”: system_prompt},
-{“role”: “user”, “content”: question}
+{"role": "system", "content": system_prompt},
+{"role": "user", "content": question}
 ]
 )
-return jsonify({“answer”: response.choices[0].message.content})
+return jsonify({"answer": response.choices[0].message.content})
 
-@app.route(’/email’, methods=[‘POST’])
+@app.route('/email', methods=['POST'])
 def email():
-email_text = request.json.get(‘email’)
+email_text = request.json.get('email')
 knowledge = search_knowledge(email_text)
-system_prompt = “You are Chase Hughes. Read this email and write a strategic response using behavioral influence principles including rapport building, compliance triggers, and elicitation techniques. Be direct and tactical.”
+system_prompt = "You are Chase Hughes. Read this email and write a strategic response using behavioral influence principles including rapport building, compliance triggers, and elicitation techniques. Be direct and tactical."
 if knowledge:
-system_prompt += f”\n\nRelevant Chase Hughes content:\n{knowledge}”
+system_prompt += f"\n\nRelevant Chase Hughes content:\n{knowledge}"
 response = client.chat.completions.create(
-model=“gpt-4o-mini”,
+model="gpt-4o-mini",
 messages=[
-{“role”: “system”, “content”: system_prompt},
-{“role”: “user”, “content”: “Write a response to this email:\n\n” + email_text}
+{"role": "system", "content": system_prompt},
+{"role": "user", "content": "Write a response to this email:\n\n" + email_text}
 ]
 )
-return jsonify({“answer”: response.choices[0].message.content})
+return jsonify({"answer": response.choices[0].message.content})
 
-@app.route(’/situation’, methods=[‘POST’])
+@app.route('/situation', methods=['POST'])
 def situation():
-situation_text = request.json.get(‘situation’)
+situation_text = request.json.get('situation')
 knowledge = search_knowledge(situation_text)
-system_prompt = “You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific.”
+system_prompt = "You are Chase Hughes. Analyze this social situation and give a precise tactical approach. Include: 1) What is actually happening behaviorally 2) The exact approach Chase would take 3) Word for word scripts to use 4) What to watch for in their response. Be direct and specific.”
 if knowledge:
-system_prompt += f”\n\nRelevant Chase Hughes content:\n{knowledge}”
+system_prompt += f"\n\nRelevant Chase Hughes content:\n{knowledge}"
 response = client.chat.completions.create(
 model=“gpt-4o-mini”,
 messages=[
-{“role”: “system”, “content”: system_prompt},
-{“role”: “user”, “content”: “Advise me on this situation:\n\n” + situation_text}
+{"role": "system", "content": system_prompt},
+{"role": "user", "content": "Advise me on this situation:\n\n" + situation_text}
 ]
 )
-return jsonify({“answer”: response.choices[0].message.content})
+return jsonify({"answer": response.choices[0].message.content})
 
 if *name* == ‘*main*’:
-port = int(os.environ.get(“PORT”, 5000))
-app.run(host=‘0.0.0.0’, port=port)
+port = int(os.environ.get("PORT", 5000))
+app.run(host='0.0.0.0', port=port)

@@ -146,7 +146,7 @@ def ask():
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "Only answer based on the provided context. If the answer is not in the context, say 'I don't have that information.'"}
+            {"role": "system", "content": "Only answer based on the provided context. If the answer is not in the context, say 'I don't have that information.'"},
             {"role": "user", "content": question}
         ]
     )

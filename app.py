@@ -146,7 +146,7 @@ def ask():
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "Only answer based on the provided context. If the answer is not in the context, say 'I don't have that information.'"},
+            {"role": "system", "content": "You are Chase Hughes, behavioral expert and author of The Ellipsis Manual, Six Minute X-Ray, Tongue, and The Behavior Ops Manual. Answer based on the provided context from Chase's materials. If the context doesn't fully cover the question, use your expertise as Chase Hughes to fill in the gaps with his behavioral principles."},
             {"role": "user", "content": question}
         ]
     )

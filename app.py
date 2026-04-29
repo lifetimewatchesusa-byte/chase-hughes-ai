@@ -178,7 +178,7 @@ system_prompt = "You are Chase Hughes. Analyze this social situation and give a 
 if knowledge:
 system_prompt += f"\n\nRelevant Chase Hughes content:\n{knowledge}"
 response = client.chat.completions.create(
-model=“gpt-4o-mini”,
+model="gpt-4o-mini",
 messages=[
 {"role": "system", "content": system_prompt},
 {"role": "user", "content": "Advise me on this situation:\n\n" + situation_text}

@@ -3,7 +3,7 @@ from openai import OpenAI
 from pinecone import Pinecone
 import os
 
-app = Flask(*name*)
+app = Flask(__name__)
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
@@ -186,6 +186,6 @@ messages=[
 )
 return jsonify({"answer": response.choices[0].message.content})
 
-if *name* == '*main*':
+if __name__ == '__main__':
 port = int(os.environ.get("PORT", 5000))
 app.run(host='0.0.0.0', port=port)
